@@ -1,0 +1,29 @@
+{
+  "name": "form-sender2-vanilla",
+  "version": "2.0.0",
+  "description": "Легковесная библиотека для отправки HTML-форм через AJAX без jQuery с использованием Fetch API",
+  "main": "src/formSender2-vanilla.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx http-server ./docs -p 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/form-sender2-vanilla.git"
+  },
+  "keywords": [
+    "javascript",
+    "forms",
+    "ajax",
+    "fetch",
+    "vanilla-js",
+    "form-submission",
+    "file-upload"
+  ],
+  "author": "Abral",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/username/form-sender2-vanilla/issues"
+  },
+  "homepage": "https://github.com/username/form-sender2-vanilla#readme"
+}
