@@ -1,4 +1,5 @@
 /**
+ * Abral Syndicate
  * FormSender2 - Vanilla JavaScript Version
  * Отправка форм без jQuery с использованием Fetch API
  * Сохраняет полную совместимость с оригинальным функционалом FormSender2
@@ -124,7 +125,7 @@ class FormSender {
         const allFields = form.querySelectorAll('input, textarea, select');
         allFields.forEach(field => {
             field.addEventListener('change', (e) => {
-                this.chngNameImput(e, form);
+                this._handleFieldChange(e, form);
             });
         });
     }
@@ -133,6 +134,29 @@ class FormSender {
      * Обработка изменения имени поля (fs-name логика)
      */
     changesetNameImput(event, form) {
+        const target = event.target;
+        const fsName = target.getAttribute('fs-name');
+        
+        if (!fsName) return;
+
+        const inputs = form.querySelectorAll('[fs-name]');
+
+        inputs.forEach(field => {
+            if (field.getAttribute('fs-name') === fsName) {
+                field.setAttribute('name', fsName);
+            }
+        });
+
+        // Автоматическая отправка формы
+        if (form.getAttribute('autosubmit')) {
+            this.sendForm(form);
+        }
+    }
+    
+    /**
+     * Обработка изменения имени поля (fs-name логика) - алиас
+     */
+    _handleFieldChange(event, form) {
         const target = event.target;
         const fsName = target.getAttribute('fs-name');
         
@@ -179,7 +203,7 @@ class FormSender {
         this.lastForm = form;
 
         // Получение callback функций
-        let Fbefore = this.FBefore;
+        let Fbefore = this.Fbefore;
         let FSuccess = this.FSuccess;
         let FError = this.FError;
 
