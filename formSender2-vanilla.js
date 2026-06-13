@@ -2,7 +2,7 @@
  * Abral Syndicate
  * FormSender2 - Vanilla JavaScript Version
  * Отправка форм без jQuery с использованием Fetch API
- * Сохраняет полную совместимость с оригинальным функционалом FormSender2
+ * Сохраняет полную совместимость с оригинальным функционалом FormSender
  * @version 2.0.0 - With Crypto Support
  */
 
