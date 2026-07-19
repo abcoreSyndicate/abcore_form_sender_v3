@@ -4,7 +4,7 @@
  * Отправка форм без jQuery с использованием Fetch API
  * Сохраняет полную совместимость с оригинальным функционалом FormSender2
  *
- * Изменения v3.3.2:
+ * Изменения v2.2.0:
  *  - Исправлена двойная отправка формы:
  *      * Добавлен re-entrance guard в sendForm / sendFormWithXHR
  *        (флаг form.dataset.fsSubmitting)
@@ -26,7 +26,7 @@ class FormSender {
         // Callback функции по умолчанию
         this.FSuccess  = (e,f) => { console.log( f.id+' done'); };
         this.FError    = (e,f) => { console.log( f.id+' error'); };
-        this.Fbefore   = (e,f) => { console.log( f.id+' prepare data...'); };
+        this.Fbefore   = (f) => { console.log( f.id+' prepare data...'); };
         this.FProgress = (e,f) => {};
 
         this.lastForm = null;
@@ -550,7 +550,7 @@ class FormSender {
             this.defFunctionDone(form);
         } catch (error) {
             console.error('FormSender Error:', error);
-            if (callbacks.FError) callbacks.FError(error);
+            if (callbacks.FError) callbacks.FError(error, form);
         } finally {
             this._unlockForm(form);
             this._unlockExternalButton(externalBtn);
@@ -624,7 +624,7 @@ class FormSender {
                     if (callbacks.FSuccess) callbacks.FSuccess(data, form);
                     this.defFunctionDone(form);
                 } else if (callbacks.FError) {
-                    callbacks.FError(xhr);
+                    callbacks.FError(xhr,form);
                 }
             } finally {
                 finish();
@@ -633,7 +633,7 @@ class FormSender {
 
         xhr.addEventListener('error', () => {
             try {
-                if (callbacks.FError) callbacks.FError(xhr);
+                if (callbacks.FError) callbacks.FError(xhr,form);
             } finally {
                 finish();
             }
