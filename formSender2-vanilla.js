@@ -4,7 +4,7 @@
  * Отправка форм без jQuery с использованием Fetch API
  * Сохраняет полную совместимость с оригинальным функционалом FormSender2
  *
- * Изменения v2.2.0:
+ * Изменения v3.3.2:
  *  - Исправлена двойная отправка формы:
  *      * Добавлен re-entrance guard в sendForm / sendFormWithXHR
  *        (флаг form.dataset.fsSubmitting)
@@ -25,9 +25,9 @@ class FormSender {
     constructor(classNameCon = '.fs') {
         // Callback функции по умолчанию
         this.FSuccess  = (e,f) => { console.log( f.id+' done'); };
-        this.FError    = (e) => { console.log( f.id+' error'); };
-        this.Fbefore   = (e) => { console.log( f.id+' prepare data...'); };
-        this.FProgress = (e, form) => {};
+        this.FError    = (e,f) => { console.log( f.id+' error'); };
+        this.Fbefore   = (e,f) => { console.log( f.id+' prepare data...'); };
+        this.FProgress = (e,f) => {};
 
         this.lastForm = null;
         this.classNameCon = classNameCon;
