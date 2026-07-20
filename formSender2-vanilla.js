@@ -41,48 +41,20 @@ class FormSender {
         this.initForms();
     }
 
-    // ============================================================
-    // Public API
-    // ============================================================
-
-    /**
-     * Set encryption keys.
-     * @param {string} key1 - ключ для имён полей (k_key) и r_key по умолчанию
-     * @param {string} [key2] - ключ для значений (v_key)
-     * @param {string} [key3] - ключ для декодирования ответа (r_key)
-     */
     setKey(key1, key2 = '', key3 = '') {
         this.k_key = key1;
         this.v_key = key2 || key1;
         this.r_key = key3 || key1;
     }
 
-    /**
-     * Enable or disable crypto encoding globally.
-     * @param {number} value - 0 to disable, 1 to enable
-     */
     setAllowCrypto(value) {
         this.allow_crypto = value;
     }
 
-    // ============================================================
-    // Private helpers — re-entrance guard
-    // ============================================================
-
-    /**
-     * Is form currently submitting?
-     * @param {HTMLFormElement} form
-     * @returns {boolean}
-     */
     _isSubmitting(form) {
         return form && form.dataset && form.dataset.fsSubmitting === '1';
     }
 
-    /**
-     * Mark form as submitting / not submitting.
-     * @param {HTMLFormElement} form
-     * @param {boolean} value
-     */
     _markSubmitting(form, value) {
         if (!form || !form.dataset) return;
         if (value) {
@@ -93,14 +65,9 @@ class FormSender {
     }
 
     // ============================================================
-    // Private helpers — callbacks / params
+    // Private
     // ============================================================
 
-    /**
-     * Resolve callbacks from form attributes (before/success/error) or fall back to defaults.
-     * @param {HTMLFormElement} form
-     * @returns {{Fbefore, FSuccess, FError, FProgress}}
-     */
     _resolveCallbacks(form) {
         const cb = {
             Fbefore:   this.Fbefore,
@@ -119,11 +86,6 @@ class FormSender {
         return cb;
     }
 
-    /**
-     * Read submit-related params from the form.
-     * @param {HTMLFormElement} form
-     * @returns {{actionUrl, method, dataType, enctype}}
-     */
     _getSubmitParams(form) {
         return {
             actionUrl: form.getAttribute('action'),
@@ -133,12 +95,6 @@ class FormSender {
         };
     }
 
-    /**
-     * Run before-callback. Returns false if submission should be aborted.
-     * @param {HTMLFormElement} form
-     * @param {Function} Fbefore
-     * @returns {boolean}
-     */
     _runBefore(form, Fbefore) {
         if (!Fbefore) return true;
         return Fbefore(form) !== false;
@@ -148,10 +104,6 @@ class FormSender {
     // Private helpers — lock / unlock
     // ============================================================
 
-    /**
-     * Selector of all interactive controls inside a form
-     * + controls bound via HTML5 form="id" attribute.
-     */
     _controlsFor(form) {
         const linkedSelector = `input[form="${form.id}"], select[form="${form.id}"], textarea[form="${form.id}"], button[form="${form.id}"]`;
         return [
@@ -160,12 +112,6 @@ class FormSender {
         ];
     }
 
-    /**
-     * Lock a single element if it isn't already locked.
-     * - Already locked (.disabled class OR disabled property): mark with .no_may_undisabled
-     * - Otherwise: disable it (.disabled + disabled = true + sentinel .fs-locked)
-     * Idempotent — safe to call multiple times on the same element.
-     */
     _lockElement(el) {
         if (el.classList.contains('fs-locked')) return; // already managed by us
 
@@ -178,9 +124,6 @@ class FormSender {
         }
     }
 
-    /**
-     * Unlock a single element unless it was already disabled before submission.
-     */
     _unlockElement(el) {
         if (el.classList.contains('no_may_undisabled')) {
             // Was disabled by someone else — keep state, just clear the marker
@@ -193,28 +136,15 @@ class FormSender {
         }
     }
 
-    /**
-     * Lock all interactive controls in the form.
-     */
     _lockForm(form) {
         this._controlsFor(form).forEach(el => this._lockElement(el));
     }
 
-    /**
-     * Unlock all interactive controls in the form.
-     */
+
     _unlockForm(form) {
         this._controlsFor(form).forEach(el => this._unlockElement(el));
     }
 
-    // ============================================================
-    // Private helpers — spinner & external button
-    // ============================================================
-
-    /**
-     * Show the spinner referenced by speener attribute.
-     * @returns {HTMLElement|null}
-     */
     _showSpinner(form) {
         const id = form.getAttribute('speener');
         if (!id) return null;
@@ -230,11 +160,6 @@ class FormSender {
         if (el) el.style.opacity = '0';
     }
 
-    /**
-     * Disable the external button referenced by btn-disable attribute.
-     * Honors the same .no_may_undisabled rule.
-     * @returns {HTMLElement|null}
-     */
     _lockExternalButton(form) {
         const id = form.getAttribute('btn-disable');
         if (!id) return null;
@@ -244,24 +169,11 @@ class FormSender {
         return btn;
     }
 
-    /**
-     * @param {HTMLElement|null} btn
-     */
     _unlockExternalButton(btn) {
         if (!btn) return;
         this._unlockElement(btn);
     }
 
-    // ============================================================
-    // Private helpers — response parsing & fetch body
-    // ============================================================
-
-    /**
-     * Parse response body according to crypto/dataType/content-type headers.
-     * @param {Response} response
-     * @param {string} dataType
-     * @returns {Promise<*>}
-     */
     async _parseResponse(response, dataType) {
         // Crypto-encoded response
         if (response.headers.get('X-Form-Crypto') === 'encoded') {
@@ -277,12 +189,6 @@ class FormSender {
         return await response.text();
     }
 
-    /**
-     * Build {headers, body} for a POST request based on crypto / multipart detection.
-     * @param {HTMLFormElement} form
-     * @param {FormData} formData
-     * @returns {{headers?: object, body: *}}
-     */
     _buildPostOptions(form, formData) {
         const hasFile    = form.querySelector('input[type="file"]');
         const isMultipart = form.getAttribute('enctype') === 'multipart/form-data' || !!hasFile;
@@ -312,9 +218,6 @@ class FormSender {
     // Crypto
     // ============================================================
 
-    /**
-     * Check if crypto should be used for this form.
-     */
     _shouldUseCrypto(form) {
         if (this.allow_crypto !== 1) return false;
         if (!form.getAttribute('use-crypto')) return false;
@@ -326,9 +229,6 @@ class FormSender {
         return true;
     }
 
-    /**
-     * Encode form data keys and values using ab_encode.
-     */
     _encodeFormData(formData) {
         const encoded = {};
         for (const [key, value] of formData.entries()) {
@@ -431,7 +331,7 @@ class FormSender {
             form.id = 'sfForm' + Math.floor(Math.random() * 999999);
         }
 
-        // ✅ Защита от повторной инициализации (предотвращает дублирование слушателей)
+        // Защита от повторной инициализации (предотвращает дублирование слушателей)
         if (form.dataset.fsInited) return;
         form.dataset.fsInited = '1';
 
@@ -470,9 +370,6 @@ class FormSender {
         });
     }
 
-    /**
-     * fs-name "radio-group" emulation + optional autosubmit.
-     */
     changesetNameImput(event, form) {
         const target = event.target;
         const fsName = target.getAttribute('fs-name');
@@ -490,9 +387,6 @@ class FormSender {
         }
     }
 
-    /**
-     * Clear .autoclean fields and remove name from [fs-name] fields after success.
-     */
     defFunctionDone(form) {
         form.querySelectorAll('.autoclean').forEach(field => {
             field.value = '';
@@ -507,11 +401,7 @@ class FormSender {
     // Submission
     // ============================================================
 
-    /**
-     * Submit the form via Fetch API.
-     */
     async sendForm(form) {
-        // ✅ Re-entrance guard: пропускаем повторные вызовы, пока идёт отправка
         if (this._isSubmitting(form)) return;
         this._markSubmitting(form, true);
 
@@ -533,7 +423,7 @@ class FormSender {
 
             const formData = this.collectFormData(form);
             const fetchOptions = { method: params.method, credentials: 'include' };
-            let response;
+            let response;	
 
             if (params.method === 'get') {
                 const urlParams = new URLSearchParams();
@@ -555,13 +445,10 @@ class FormSender {
             this._unlockForm(form);
             this._unlockExternalButton(externalBtn);
             this._hideSpinner(spinner);
-            this._markSubmitting(form, false); // ✅ снимаем флаг всегда
+            this._markSubmitting(form, false);
         }
     }
 
-    /**
-     * Submit the form, choosing XHR (with progress for files) or Fetch.
-     */
     sendFormWithProgress(form) {
         this.lastForm = form;
         if (form.querySelector('input[type="file"]')) {
@@ -571,11 +458,7 @@ class FormSender {
         }
     }
 
-    /**
-     * Submit via XMLHttpRequest (needed for upload-progress events).
-     */
     sendFormWithXHR(form) {
-        // ✅ Re-entrance guard
         if (this._isSubmitting(form)) return;
         this._markSubmitting(form, true);
 
@@ -590,7 +473,7 @@ class FormSender {
             this._unlockForm(form);
             this._unlockExternalButton(externalBtn);
             this._hideSpinner(spinner);
-            this._markSubmitting(form, false); // ✅ единая точка снятия флага
+            this._markSubmitting(form, false);
         };
 
         if (!this._runBefore(form, callbacks.Fbefore)) {
@@ -616,20 +499,22 @@ class FormSender {
         });
 
         xhr.addEventListener('load', () => {
-            try {
-                let data = xhr.response;
-                try { data = JSON.parse(xhr.responseText); } catch (e) { /* keep as text */ }
+			try {
+				let data = xhr.response;
+				try { data = JSON.parse(xhr.responseText); } catch (e) { /* keep as text */ }
 
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    if (callbacks.FSuccess) callbacks.FSuccess(data, form);
-                    this.defFunctionDone(form);
-                } else if (callbacks.FError) {
-                    callbacks.FError(xhr,form);
-                }
-            } finally {
-                finish();
-            }
-        });
+				if (xhr.status >= 200 && xhr.status < 300) {
+					if (callbacks.FSuccess) callbacks.FSuccess(data, form);
+					this.defFunctionDone(form);
+				} else if (callbacks.FError) {
+					callbacks.FError(xhr, form);
+				}
+			} catch (err) {
+				if (callbacks.FError) callbacks.FError(err, form);
+			} finally {
+				finish();
+			}
+		});
 
         xhr.addEventListener('error', () => {
             try {
@@ -640,12 +525,10 @@ class FormSender {
         });
 
         xhr.open('POST', params.actionUrl);
-        xhr.send(formData);
+		xhr.withCredentials = true;
+		xhr.send(formData);
     }
 
-    /**
-     * Collect form data into FormData, honouring input types.
-     */
     collectFormData(form) {
         const formData = new FormData();
 
@@ -677,9 +560,16 @@ class FormSender {
         });
 
         form.querySelectorAll('select').forEach(select => {
-            const name = select.getAttribute('name') || select.getAttribute('id');
-            if (name) formData.append(name, select.value);
-        });
+			const name = select.getAttribute('name') || select.getAttribute('id');
+			if (!name) return;
+			if (select.multiple) {
+				Array.from(select.selectedOptions).forEach(opt => {
+					formData.append(name, opt.value);
+				});
+			} else {
+				formData.append(name, select.value);
+			}
+		});
 
         return formData;
     }
